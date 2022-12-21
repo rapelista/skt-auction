@@ -2,12 +2,13 @@
 
 import { useEffect, useState } from "react";
 import { useData } from "../../context";
+import { ErrorActions } from "../../context/action";
 import { getAuctions, getDataAuction } from "../../service/eth";
 import AuctionCard from "../auction_card";
 import Landing from "../landing";
 
 export default function Auction() {
-  const { isConnected, provider, address, signer } = useData();
+  const { isConnected, provider, address, signer, dispatch } = useData();
   const [all_address, setAddress] = useState([]);
   const [data, setData] = useState([]);
 
@@ -15,16 +16,20 @@ export default function Auction() {
     setAddress([]);
 
     if (isConnected) {
-      getAuctions(provider).then((all_address) => {
-        setAddress(all_address);
-        all_address.map((address) => {
-          getDataAuction(address, signer).then((res) => {
-            setData((prev) => {
-              return [...prev, [...res, address]];
+      getAuctions(provider)
+        .then((all_address) => {
+          setAddress(all_address);
+          all_address.map((address) => {
+            getDataAuction(address, signer).then((res) => {
+              setData((prev) => {
+                return [...prev, [...res, address]];
+              });
             });
           });
+        })
+        .catch(() => {
+          dispatch({ type: ErrorActions.SET_ONERROR });
         });
-      });
     }
   }, [isConnected]);
 
